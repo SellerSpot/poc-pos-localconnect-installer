@@ -23,6 +23,18 @@ def print_message(message, type, prefix, end="\n"):  # used to print messages to
 
 # MONGODB INSTALLATION--------------------------------------------------------------------------------------------
 
+# custom download progress bar for wget
+def bar_custom_mongodb(current, total, width=80):
+    if current == total:
+        print_message(
+            "Downloading Mongo DB: %d%%" % (
+                current / total * 100), "info", "  -", "\n")
+    else:
+        print_message(
+            "Downloading Mongo DB: %d%%" % (
+                current / total * 100), "info", "  -", "\r")
+
+
 def check_mongodb():  # used to check if mongodb has been installed
     mongoCheck = subprocess.Popen(
         "mongod --version", shell=True, stdout=subprocess.PIPE, creationflags=subprocess.CREATE_NO_WINDOW)
@@ -47,7 +59,7 @@ def invoke_downloaded_mongodbinstaller():  # used to invoke the local mongodb in
 def download_mongodbinstaller():  # used to download mongodb installer
     print_message("Initiating download of Mongo DB...", "info", "  -")
     wget.download(
-        'https://fastdl.mongodb.org/windows/mongodb-windows-x86_64-4.4.1-signed.msi')
+        'https://fastdl.mongodb.org/windows/mongodb-windows-x86_64-4.4.1-signed.msi', bar=bar_custom_mongodb)
 
 
 def initiateMongoDbChecks():  # used to initiate and handle mongodb installation checks
@@ -106,7 +118,7 @@ def initiate_server(pathStr):  # used to initiate the latest downloaded server
 
 def check_local_server_status():  # used to check the status of local server
     try:
-        response = requests.head('http://localhost:40040')
+        response = requests.head('http://localhost:4000')
         if response.status_code == 200:
             print_message(
                 "Local server up and running", "success", "  -")
