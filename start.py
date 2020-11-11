@@ -5,6 +5,8 @@ import wget
 from pathlib import Path
 import requests
 import time
+import ctypes
+import sys
 
 
 # COMMON--------------------------------------------------------------------------------------------
@@ -25,7 +27,15 @@ def print_message(message, type, prefix, end="\n"):  # used to print messages to
     print(message, end=end)
 
 
+def is_admin():
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        return False
+
+
 # MONGODB INSTALLATION--------------------------------------------------------------------------------------------
+
 
 # custom download progress bar for wget
 def bar_custom_mongodb(current, total, width=80):
@@ -63,7 +73,7 @@ def invoke_downloaded_mongodbinstaller():  # used to invoke the local mongodb in
 def download_mongodbinstaller():  # used to download mongodb installer
     print_message("Initiating download of Mongo DB...", "info", "  -")
     wget.download(
-        mongoDBURL', bar=bar_custom_mongodb)
+        mongoDBURL, bar=bar_custom_mongodb)
 
 
 def initiateMongoDbChecks():  # used to initiate and handle mongodb installation checks
@@ -83,6 +93,7 @@ def initiateMongoDbChecks():  # used to initiate and handle mongodb installation
 
 
 # SERVER INSTALLATION--------------------------------------------------------------------------------------------
+
 
 # custom download progress bar for wget
 def bar_custom_local_server(current, total, width=80):
@@ -136,9 +147,9 @@ def check_local_server_status():  # used to check the status of local server
 
 def initiateLocalServerChecks():  # used to initiate and handle installation of local server
     print_message("Local server check", "success", "")
-    # path to store the local server in
-    pathStr = str(Path.home()) + \
-        "\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup"
+    # creating folder for local server in program files
+    pathStr = os.environ["ProgramW6432"]+"\SellerSpotServer"
+    os.mkdir(pathStr)
     os.chdir(pathStr)
     # stopping running servers
     stop_server()
@@ -158,11 +169,20 @@ def initiateLocalServerChecks():  # used to initiate and handle installation of 
 # MAIN FUNCTION--------------------------------------------------------------------------------------------
 if __name__ == "__main__":
 
-    # clearing output and initializing text color engine
-    init_colorit()
+    if is_admin():
+        # clearing output and initializing text color engine
+        init_colorit()
 
-    # initialising mongoDb checks
-    initiateMongoDbChecks()
+        # initialising mongoDb checks
+        initiateMongoDbChecks()
 
-    # initialising localServer checks
-    initiateLocalServerChecks()
+        # initialising localServer checks
+        initiateLocalServerChecks()
+
+        # closing message
+        print_message(
+            "SellerSpot LocalConnect successfully installed", "success", "")
+    else:
+        # Re-run the program with admin rights
+        ctypes.windll.shell32.ShellExecuteW(
+            None, "runas", sys.executable, " ".join(sys.argv), None, 1)
