@@ -9,6 +9,10 @@ import time
 
 # COMMON--------------------------------------------------------------------------------------------
 
+# download urls
+localServerURL = "https://sellerspotdev.s3.ap-south-1.amazonaws.com/LocalConnectServer.exe?versionId=iwg_KbMTTNwyff_JdWs3KU9SrpEAF67F"
+mongoDBURL = "https://fastdl.mongodb.org/windows/mongodb-windows-x86_64-4.4.1-signed.msi"
+
 
 def print_message(message, type, prefix, end="\n"):  # used to print messages to console
     print(prefix, end=" ")
@@ -59,7 +63,7 @@ def invoke_downloaded_mongodbinstaller():  # used to invoke the local mongodb in
 def download_mongodbinstaller():  # used to download mongodb installer
     print_message("Initiating download of Mongo DB...", "info", "  -")
     wget.download(
-        'https://fastdl.mongodb.org/windows/mongodb-windows-x86_64-4.4.1-signed.msi', bar=bar_custom_mongodb)
+        mongoDBURL', bar=bar_custom_mongodb)
 
 
 def initiateMongoDbChecks():  # used to initiate and handle mongodb installation checks
@@ -106,7 +110,7 @@ def stop_server():  # used to stop execution of any running server instances
 
 def get_latest_server(pathStr):  # used to get the latest version of local server
     wget.download(
-        'https://sellerspotdev.s3.ap-south-1.amazonaws.com/sellerspotserver.exe', pathStr, bar=bar_custom_local_server)
+        localServerURL, pathStr, bar=bar_custom_local_server)
 
 
 def initiate_server(pathStr):  # used to initiate the latest downloaded server
