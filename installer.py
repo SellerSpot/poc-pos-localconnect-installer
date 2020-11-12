@@ -7,6 +7,7 @@ import requests
 import time
 import ctypes
 import sys
+import pymongo
 
 
 # COMMON--------------------------------------------------------------------------------------------
@@ -77,8 +78,9 @@ def create_custom_data_store():  # used to create the custom data store location
     if not os.path.isdir(pathStr):
         os.mkdir(pathStr)
     # creating log file
-    f = open(applicationFolderPath+"\log\mongod.log", "w")
-    f.close()
+    if not os.path.isfile(applicationFolderPath+"\log\mongod.log"):
+        f = open(applicationFolderPath+"\log\mongod.log", "w")
+        f.close()
 
 
 def delete_existing_mongodb_config():  # used to delete the existing mongodb config file
@@ -96,19 +98,20 @@ def download_mongodb_config():  # used to download the config file for sellerspo
 
 
 def check_mongodb():  # used to check if mongodb has been installed
-    mongoCheck = subprocess.Popen(
-        "mongod --version", shell=True, stdout=subprocess.PIPE, creationflags=subprocess.CREATE_NO_WINDOW)
-    mongoCheck_status = mongoCheck.wait()
-    # if mongodb is installed
-    if mongoCheck_status == 0:
+    client = pymongo.MongoClient(serverSelectionTimeoutMS=500)
+    try:
+        # The ismaster command is cheap and does not require auth.
+        client.admin.command('ismaster')
         return True
-    else:
+    except pymongo.errors.ConnectionFailure:
         return False
 
 
 def invoke_custom_database_server():  # used to invoke custom mongodb server
+    os.chdir(r"C:\Program Files\MongoDB\Server\4.2\bin")
     mongoCheck = subprocess.Popen(
-        "mongod --config C:\SellerSpot\mongoconfig.cgf", shell=True, stdout=subprocess.PIPE, creationflags=subprocess.CREATE_NO_WINDOW)
+        "mongod.exe --config C:\SellerSpot\mongoconfig.cgf", shell=True,
+        stdout=subprocess.PIPE, creationflags=subprocess.CREATE_NO_WINDOW)
 
 
 def check_mongodb_installer():  # used to check if mongodb installer is already downloaded
@@ -137,6 +140,7 @@ def initiateMongoDbChecks():  # used to initiate and handle mongodb installation
         print_message("Mongo DB Exists", "success", "")
         create_custom_data_store()
         delete_existing_mongodb_config()
+        time.sleep(1)
         download_mongodb_config()
         invoke_custom_database_server()
 
