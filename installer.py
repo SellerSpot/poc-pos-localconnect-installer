@@ -8,20 +8,24 @@ import time
 import ctypes
 import sys
 import pymongo
+import winapps
+import csv
+import codecs
 
 
 # COMMON--------------------------------------------------------------------------------------------
 
 # download urls
 localServerURL = "https://sellerspotdev.s3.ap-south-1.amazonaws.com/LocalConnectServer.exe?versionId=vcIhPcMi_yqP9_XYZbh8N9iLLMr4hEV7"
-localServerInvokeScriptURL = "https://sellerspotdev.s3.ap-south-1.amazonaws.com/sellerspotServerInvoke.exe?versionId=a9AqmoTRcdfSmcFZvhjaXnmpp82gME4h"
+localServerInvokeScriptURL = "https://sellerspotdev.s3.ap-south-1.amazonaws.com/sellerspotServerInvoke.exe?versionId=OSQU50Q2JI1eXGtj9wHjy.VPZWetyKT5"
 mongoDBURL = "https://fastdl.mongodb.org/windows/mongodb-windows-x86_64-4.4.1-signed.msi"
 mongoDBConfigURL = "https://sellerspotdev.s3.ap-south-1.amazonaws.com/mongoconfig.cgf?versionId=zTlArQUWldwQGKSZuC399GIY7lKTLOJo"
 
 # file paths
-applicationFolderPath = "C:\SellerSpot"
+applicationFolderPath = str(Path.home())+"\SellerSpot"
 startupFolderPath = str(Path.home()) + \
     "\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup"
+mongoDBRootPath = r"C:\Program Files\MongoDB\Server"
 
 
 def print_message(message, type, prefix, end="\n"):  # used to print messages to console
@@ -107,8 +111,9 @@ def check_mongodb():  # used to check if mongodb has been installed
         return False
 
 
-def invoke_custom_database_server():  # used to invoke custom mongodb server
-    os.chdir(r"C:\Program Files\MongoDB\Server\4.2\bin")
+# used to invoke custom mongodb server
+def invoke_custom_database_server(mongoDBVersion):
+    os.chdir(mongoDBRootPath+"\\"+mongoDBVersion+"\\bin")
     mongoCheck = subprocess.Popen(
         "mongod.exe --config C:\SellerSpot\mongoconfig.cgf", shell=True,
         stdout=subprocess.PIPE, creationflags=subprocess.CREATE_NO_WINDOW)
@@ -124,7 +129,7 @@ def check_mongodb_installer():  # used to check if mongodb installer is already 
 def invoke_downloaded_mongodbinstaller():  # used to invoke the local mongodb installer
     print_message(
         "Opening downloaded MongoDB installer...", "info", "  -")
-    subprocess.call(f'msiexec /i {check_mongodb_installer()}', shell=True)
+    os.system(f'msiexec /i {check_mongodb_installer()}')
     initiateMongoDbChecks()
 
 
@@ -134,15 +139,34 @@ def download_mongodbinstaller():  # used to download mongodb installer
         mongoDBURL, bar=bar_custom_mongodb)
 
 
+def get_installed_mongodb_version():  # used to get the version of mongodb installed
+    print_message("Checking version of MongoDB...",
+                  "info", "  -", "\r")
+    # getting all the apps installed in the local system into a csv file
+    os.system("wmic product get name,version /format:csv > installedapps.csv")
+    # opening app to read using codec pkg to handle conversion to utf-16
+    spamreader = csv.reader(codecs.open(
+        'installedapps.csv', 'rU', 'utf-16'), delimiter=',', quotechar='|')
+    # finding the right version of mongodb installed
+    for row in spamreader:
+        if len(row) > 0 and "MongoDB" in row[1]:
+            # updating global instances
+            mongoDBVersion = str('.'.join(row[2].split('.')[0:2]))
+            print_message("Installed version of Mongo DB - v%s" %
+                          mongoDBVersion, "info", "  -", "\n")
+            return mongoDBVersion
+
+
 def initiateMongoDbChecks():  # used to initiate and handle mongodb installation checks
 
     if check_mongodb():  # checking mongodb existance
         print_message("Mongo DB Exists", "success", "")
+        mongoDbVersion = get_installed_mongodb_version()
         create_custom_data_store()
         delete_existing_mongodb_config()
         time.sleep(1)
         download_mongodb_config()
-        invoke_custom_database_server()
+        invoke_custom_database_server(mongoDbVersion)
 
     else:
         print_message("Mongo DB not installed", "failure", "")
