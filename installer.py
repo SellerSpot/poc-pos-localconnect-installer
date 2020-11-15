@@ -49,23 +49,11 @@ def create_application_folder():  # used to create the application folder in Pro
 def bar_custom_mongodb(current, total, width=80):
     if current == total:
         print_message(
-            "Downloading Mongo DB: %d%%" % (
+            "Downloading database: %d%%" % (
                 current / total * 100), "info", "  -", "\n")
     else:
         print_message(
-            "Downloading Mongo DB: %d%%" % (
-                current / total * 100), "info", "  -", "\r")
-
-
-# custom download progress bar for wget mongodb config file
-def bar_custom_mongodbconfig(current, total, width=80):
-    if current == total:
-        print_message(
-            "Downloading Mongo DB Config File: %d%%" % (
-                current / total * 100), "info", "  -", "\n")
-    else:
-        print_message(
-            "Downloading Mongo DB Config File: %d%%" % (
+            "Downloading database: %d%%" % (
                 current / total * 100), "info", "  -", "\r")
 
 
@@ -87,14 +75,14 @@ def create_custom_data_store():  # used to create the custom data store location
 
 def delete_existing_mongodb_config():  # used to delete the existing mongodb config file
     print_message(
-        "Deleting existing Mongo DB Config (if exists)...", "info", "  -")
+        "Deleting existing database Config (if exists)...", "info", "  -")
     os.chdir(applicationFolderPath)
     subprocess.Popen(
         "del mongoconfig.cgf", shell=True, stdout=subprocess.PIPE, creationflags=subprocess.CREATE_NO_WINDOW)
 
 
 def create_mongodb_config():  # used to download the config file for sellerspot mongodb
-    print_message("Creating Mongo DB Config...", "info", "  -")
+    print_message("Creating database Config...", "info", "  -")
     mongoConfigFile = open(applicationFolderPath+"\\mongoconfig.cgf", "w")
     # writing data to file
     mongoConfigFile.write("storage:\n")
@@ -129,19 +117,19 @@ def check_mongodb_installer():  # used to check if mongodb installer is already 
 
 def invoke_downloaded_mongodbinstaller():  # used to invoke the local mongodb installer
     print_message(
-        "Opening downloaded MongoDB installer...", "info", "  -")
+        "Opening downloaded database installer...", "info", "  -")
     os.system(f'msiexec /i {check_mongodb_installer()}')
     initiateMongoDbChecks()
 
 
 def download_mongodbinstaller():  # used to download mongodb installer
-    print_message("Initiating download of Mongo DB...", "info", "  -")
+    print_message("Initiating download of database...", "info", "  -")
     wget.download(
         mongoDBURL, bar=bar_custom_mongodb)
 
 
 def get_installed_mongodb_version():  # used to get the version of mongodb installed
-    print_message("Checking version of MongoDB...",
+    print_message("Checking version of database...",
                   "info", "-", "\r")
     # getting all the apps installed in the local system into a csv file
     os.system("wmic product get name,version /format:csv > installedapps.csv")
@@ -153,7 +141,7 @@ def get_installed_mongodb_version():  # used to get the version of mongodb insta
         if len(row) > 0 and "MongoDB" in row[1]:
             # updating global instances
             mongoDBVersion = str('.'.join(row[2].split('.')[0:2]))
-            print_message("Installed version of Mongo DB - v%s" %
+            print_message("Installed version of database - v%s" %
                           mongoDBVersion, "info", "  -", "\n")
             return mongoDBVersion
     return False
@@ -171,7 +159,7 @@ def initiateMongoDbChecks():  # used to initiate and handle mongodb installation
     mongoDbVersion = get_installed_mongodb_version()
 
     if mongoDbVersion:  # checking mongodb existance
-        print_message("Mongo DB Exists", "success", "")
+        print_message("Databse Installed", "success", "")
         delete_created_csv_file()
         create_custom_data_store()
         delete_existing_mongodb_config()
@@ -180,7 +168,7 @@ def initiateMongoDbChecks():  # used to initiate and handle mongodb installation
         invoke_custom_database_server(mongoDbVersion)
 
     else:
-        print_message("Mongo DB not installed", "failure", "")
+        print_message("Database not installed", "failure", "")
 
         if check_mongodb_installer():  # checking if mongodb is already downloaded
             invoke_downloaded_mongodbinstaller()
