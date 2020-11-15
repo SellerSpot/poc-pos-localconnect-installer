@@ -7,7 +7,6 @@ import requests
 import time
 import ctypes
 import sys
-import pymongo
 import winapps
 import csv
 import codecs
@@ -22,10 +21,10 @@ mongoDBURL = "https://fastdl.mongodb.org/windows/mongodb-windows-x86_64-4.4.1-si
 mongoDBConfigURL = "https://sellerspotdev.s3.ap-south-1.amazonaws.com/mongoconfig.cgf?versionId=zTlArQUWldwQGKSZuC399GIY7lKTLOJo"
 
 # file paths
-applicationFolderPath = str(Path.home())+"\SellerSpot"
+applicationFolderPath = str(Path.home())+"\\SellerSpot"
 startupFolderPath = str(Path.home()) + \
-    "\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup"
-mongoDBRootPath = r"C:\Program Files\MongoDB\Server"
+    "\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup"
+mongoDBRootPath = "C:\\Program Files\\MongoDB\\Server"
 
 
 def print_message(message, type, prefix, end="\n"):  # used to print messages to console
@@ -74,16 +73,16 @@ def bar_custom_mongodbconfig(current, total, width=80):
 def create_custom_data_store():  # used to create the custom data store location for sellerspot mongodb instance
     print_message("Creating custom store folders...", "info", "  -")
     # navigating to sellerspot server folder
-    pathStr = applicationFolderPath+"\data"
+    pathStr = applicationFolderPath+"\\data"
     if not os.path.isdir(pathStr):
         os.mkdir(pathStr)
     # creating log store
-    pathStr = applicationFolderPath+"\log"
+    pathStr = applicationFolderPath+"\\log"
     if not os.path.isdir(pathStr):
         os.mkdir(pathStr)
     # creating log file
-    if not os.path.isfile(applicationFolderPath+"\log\mongod.log"):
-        f = open(applicationFolderPath+"\log\mongod.log", "w")
+    if not os.path.isfile(applicationFolderPath+"\\log\\mongod.log"):
+        f = open(applicationFolderPath+"\\log\\mongod.log", "w")
         f.close()
 
 
@@ -95,27 +94,30 @@ def delete_existing_mongodb_config():  # used to delete the existing mongodb con
         "del mongoconfig.cgf", shell=True, stdout=subprocess.PIPE, creationflags=subprocess.CREATE_NO_WINDOW)
 
 
-def download_mongodb_config():  # used to download the config file for sellerspot mongodb
-    print_message("Initiating download of Mongo DB Config...", "info", "  -")
-    wget.download(
-        mongoDBConfigURL, applicationFolderPath, bar=bar_custom_mongodbconfig)
-
-
-def check_mongodb():  # used to check if mongodb has been installed
-    client = pymongo.MongoClient(serverSelectionTimeoutMS=500)
-    try:
-        # The ismaster command is cheap and does not require auth.
-        client.admin.command('ismaster')
-        return True
-    except pymongo.errors.ConnectionFailure:
-        return False
+def create_mongodb_config():  # used to download the config file for sellerspot mongodb
+    print_message("Creating Mongo DB Config...", "info", "  -")
+    mongoConfigFile = open(applicationFolderPath+"\\mongoconfig.cgf", "w")
+    # writing data to file
+    mongoConfigFile.write("storage:\n")
+    mongoConfigFile.write("  dbPath: "+applicationFolderPath+"\\data\n")
+    mongoConfigFile.write("  journal:\n")
+    mongoConfigFile.write("    enabled: true\n")
+    mongoConfigFile.write("systemLog:\n")
+    mongoConfigFile.write("  destination: file\n")
+    mongoConfigFile.write("  logAppend: true\n")
+    mongoConfigFile.write(
+        "  path:  "+applicationFolderPath+"\\log\\mongod.log\n")
+    mongoConfigFile.write("net:\n")
+    mongoConfigFile.write("  port: 49050\n")
+    mongoConfigFile.write("  bindIp: 127.0.0.1\n")
+    mongoConfigFile.close()
 
 
 # used to invoke custom mongodb server
 def invoke_custom_database_server(mongoDBVersion):
     os.chdir(mongoDBRootPath+"\\"+mongoDBVersion+"\\bin")
-    mongoCheck = subprocess.Popen(
-        "mongod.exe --config C:\SellerSpot\mongoconfig.cgf", shell=True,
+    subprocess.Popen(
+        "mongod.exe --config "+applicationFolderPath+"\\mongoconfig.cgf", shell=True,
         stdout=subprocess.PIPE, creationflags=subprocess.CREATE_NO_WINDOW)
 
 
@@ -141,7 +143,7 @@ def download_mongodbinstaller():  # used to download mongodb installer
 
 def get_installed_mongodb_version():  # used to get the version of mongodb installed
     print_message("Checking version of MongoDB...",
-                  "info", "  -", "\r")
+                  "info", "-", "\r")
     # getting all the apps installed in the local system into a csv file
     os.system("wmic product get name,version /format:csv > installedapps.csv")
     # opening app to read using codec pkg to handle conversion to utf-16
@@ -155,17 +157,27 @@ def get_installed_mongodb_version():  # used to get the version of mongodb insta
             print_message("Installed version of Mongo DB - v%s" %
                           mongoDBVersion, "info", "  -", "\n")
             return mongoDBVersion
+    return False
+
+
+def delete_created_csv_file():  # used to delete the app listing csv files
+    subprocess.Popen(
+        "del installedapps.csv", shell=True,
+        stdout=subprocess.PIPE, creationflags=subprocess.CREATE_NO_WINDOW)
 
 
 def initiateMongoDbChecks():  # used to initiate and handle mongodb installation checks
 
-    if check_mongodb():  # checking mongodb existance
+    # getting installed version of mongodb
+    mongoDbVersion = get_installed_mongodb_version()
+
+    if mongoDbVersion:  # checking mongodb existance
         print_message("Mongo DB Exists", "success", "")
-        mongoDbVersion = get_installed_mongodb_version()
+        delete_created_csv_file()
         create_custom_data_store()
         delete_existing_mongodb_config()
         time.sleep(1)
-        download_mongodb_config()
+        create_mongodb_config()
         invoke_custom_database_server(mongoDbVersion)
 
     else:
@@ -228,7 +240,7 @@ def check_local_server_status():  # used to check the status of local server
         else:
             print_message(
                 "Local server initialisation failed - please contact developers", "failure", "  -")
-    except requests.exceptions.ConnectionError as e:
+    except requests.exceptions.ConnectionError:
         print_message(
             "Local server initialisation failed - please contact developers", "failure", "  -")
 
@@ -236,7 +248,7 @@ def check_local_server_status():  # used to check the status of local server
 def initiateLocalServerChecks():  # used to initiate and handle installation of local server
     print_message("Local server check", "success", "")
     # creating server folder
-    pathStr = applicationFolderPath+"\server"
+    pathStr = applicationFolderPath+"\\server"
     if not os.path.isdir(pathStr):
         os.mkdir(pathStr)
     os.chdir(pathStr)
