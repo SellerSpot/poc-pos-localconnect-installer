@@ -16,9 +16,8 @@ import codecs
 
 # download urls
 localServerURL = "https://sellerspotdev.s3.ap-south-1.amazonaws.com/LocalConnectServer.exe?versionId=vcIhPcMi_yqP9_XYZbh8N9iLLMr4hEV7"
-localServerInvokeScriptURL = "https://sellerspotdev.s3.ap-south-1.amazonaws.com/sellerspotServerInvoke.exe?versionId=OSQU50Q2JI1eXGtj9wHjy.VPZWetyKT5"
+localServerInvokeScriptURL = "https://sellerspotdev.s3.ap-south-1.amazonaws.com/sellerspotServerInvoke.exe?versionId=QkEHaGjU8cPD67yjdsAk6l4LmtrEjS35"
 mongoDBURL = "https://fastdl.mongodb.org/windows/mongodb-windows-x86_64-4.4.1-signed.msi"
-mongoDBConfigURL = "https://sellerspotdev.s3.ap-south-1.amazonaws.com/mongoconfig.cgf?versionId=zTlArQUWldwQGKSZuC399GIY7lKTLOJo"
 
 # file paths
 applicationFolderPath = str(Path.home())+"\\SellerSpot"

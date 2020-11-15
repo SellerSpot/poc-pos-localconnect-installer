@@ -46,8 +46,6 @@ if __name__ == "__main__":
     os.chdir("C:\\Program Files\\MongoDB\\Server\\" +
              installedMongoDBVersion+"\\bin")
 
-    os.system("mongod.exe --config "+applicationFolderPath+"\\mongoconfig.cgf")
-
-    # # initializing database
-    # mongoCheck = subprocess.Popen(
-    #     "mongod.exe --config "+applicationFolderPath+"\\mongoconfig.cgf", shell=True, stdout=subprocess.PIPE, creationflags=subprocess.CREATE_NO_WINDOW)
+    # initializing database
+    mongoCheck = subprocess.Popen(
+        "mongod.exe --config "+applicationFolderPath+"\\mongoconfig.cgf", shell=True, stdout=subprocess.PIPE, creationflags=subprocess.CREATE_NO_WINDOW)
